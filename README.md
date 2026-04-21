@@ -12,8 +12,8 @@ Sistema web completo para gerenciamento de biblioteca, desenvolvido com Java 24 
 - **Spring Data JPA** (persistência)
 
 **Pré-requisitos**
--Java 24+ instalado
--Maven 3.9+ instalado
+- Java 24+ instalado
+- Maven 3.9+ instalado
 
 **Funcionalidades**
 - **Login seguro** com BCrypt
@@ -26,16 +26,16 @@ Sistema web completo para gerenciamento de biblioteca, desenvolvido com Java 24 
 **Como executar**
 
 Passos
- 1. Entre na pasta do projeto
- 2. Compile e execute o comando  "mvn spring-boot:run"
+- 1. Entre na pasta do projeto
+ - 2. Compile e execute o comando  "mvn spring-boot:run"
 
 
 Acesso
-Abra o navegador em: **http://localhost:8080**
+- Abra o navegador em: **http://localhost:8080**
 
 **Credenciais padrão**
-Email: admin@gmail.com
-Senha:admin123 
+- Email: admin@gmail.com
+- Senha:admin123 
 
 
 **MongoDB**
