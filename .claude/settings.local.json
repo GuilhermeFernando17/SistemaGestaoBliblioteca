@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'C:\\\\Users\\\\guilh\\\\Documentos\\\\Guilherme\\\\UMC\\\\8 semestre\\\\biblioteca' -type d -not -path */target/* -not -path */.idea/*)"
+    ]
+  }
+}

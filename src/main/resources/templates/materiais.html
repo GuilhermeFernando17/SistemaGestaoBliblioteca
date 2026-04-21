@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Materiais - Sistema de Biblioteca</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Catálogo de Materiais</h1>
+        <p>Gerenciamento de Acervo</p>
+      </div>
+      <button class="btn-primary" onclick="openModal('createMaterialModal')">+ Novo Material</button>
+    </div>
+
+    <form class="search-form" th:action="@{/materiais}" method="get">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" name="busca" th:value="${busca}" placeholder="Buscar por título..."/>
+      <button type="submit">Buscar</button>
+    </form>
+
+    <div class="card">
+      <h2 class="card-title">Livros Cadastrados (<span th:text="${materiais.size()}">0</span>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th><th>Autor</th><th>Tipo</th><th>ISBN</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="m : ${materiais}">
+            <td th:text="${m.titulo}"></td>
+            <td th:text="${m.autor}"></td>
+            <td th:text="${m.tipo}"></td>
+            <td th:text="${m.isbn}"></td>
+            <td class="actions-cell">
+              <button class="btn-sm btn-edit"
+                th:data-id="${m.id}"
+                th:data-titulo="${m.titulo}"
+                th:data-autor="${m.autor}"
+                th:data-tipo="${m.tipo}"
+                th:data-isbn="${m.isbn}">Editar</button>
+              <form th:action="@{/materiais/{id}/deletar(id=${m.id})}" method="post"
+                    onsubmit="return confirm('Excluir este material?')">
+                <button type="submit" class="btn-sm btn-delete">Excluir</button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(materiais)}">
+            <td colspan="5" class="empty-row">Nenhum material encontrado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- CREATE MODAL -->
+<div id="createMaterialModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Novo Material</h3>
+      <button class="modal-close-btn" onclick="closeModal('createMaterialModal')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <form th:action="@{/materiais}" method="post">
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" name="titulo" required placeholder="Título do material"/>
+        </div>
+        <div class="form-group">
+          <label>Autor</label>
+          <input type="text" name="autor" required placeholder="Nome do autor"/>
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select name="tipo">
+            <option value="Livro">Livro</option>
+            <option value="Revista">Revista</option>
+            <option value="DVD">DVD</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ISBN</label>
+          <input type="text" name="isbn" placeholder="ISBN / código"/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('createMaterialModal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editMaterialModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Editar Material</h3>
+      <button class="modal-close-btn" onclick="closeModal('editMaterialModal')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <form id="editMaterialForm" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="editTitulo" name="titulo" required/>
+        </div>
+        <div class="form-group">
+          <label>Autor</label>
+          <input type="text" id="editAutor" name="autor" required/>
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="editTipo" name="tipo">
+            <option value="Livro">Livro</option>
+            <option value="Revista">Revista</option>
+            <option value="DVD">DVD</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ISBN</label>
+          <input type="text" id="editIsbn" name="isbn"/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('editMaterialModal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Atualizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.btn-edit').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.getElementById('editTitulo').value = this.dataset.titulo;
+    document.getElementById('editAutor').value = this.dataset.autor;
+    document.getElementById('editTipo').value = this.dataset.tipo;
+    document.getElementById('editIsbn').value = this.dataset.isbn;
+    document.getElementById('editMaterialForm').action = '/materiais/' + this.dataset.id + '/editar';
+    openModal('editMaterialModal');
+  });
+});
+
+document.querySelectorAll('.modal-backdrop').forEach(function(bd){
+  bd.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); });
+});
+</script>
+</body>
+</html>

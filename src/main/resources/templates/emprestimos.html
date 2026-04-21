@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Empréstimos - Sistema de Biblioteca</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Empréstimos e Devoluções</h1>
+        <p>Gerenciamento de Empréstimo</p>
+      </div>
+      <button class="btn-primary" onclick="openModal('createEmprestimoModal')">+ Novo Empréstimo</button>
+    </div>
+
+    <form class="search-form" th:action="@{/emprestimos}" method="get">
+      <input type="hidden" name="status" th:value="${statusAtual}"/>
+      <span class="search-icon">&#128269;</span>
+      <input type="text" name="busca" th:value="${busca}" placeholder="Buscar por nome..."/>
+      <button type="submit">Buscar</button>
+    </form>
+
+    <div class="card">
+      <div class="tabs-header">
+        <h2 class="card-title">Empréstimos</h2>
+        <div class="tabs">
+          <a th:href="@{/emprestimos(status='Ativo', busca=${busca})}"
+             class="tab-link" th:classappend="${statusAtual == 'Ativo' ? ' active' : ''}">
+            Ativos (<span th:text="${totalAtivos}">0</span>)
+          </a>
+          <a th:href="@{/emprestimos(status='Atrasado', busca=${busca})}"
+             class="tab-link" th:classappend="${statusAtual == 'Atrasado' ? ' active' : ''}">
+            Atrasados (<span th:text="${totalAtrasados}">0</span>)
+          </a>
+          <a th:href="@{/emprestimos(status='Devolvido', busca=${busca})}"
+             class="tab-link" th:classappend="${statusAtual == 'Devolvido' ? ' active' : ''}">
+            Devolvidos (<span th:text="${totalDevolvidos}">0</span>)
+          </a>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Usuário</th><th>Material</th><th>Empréstimo</th><th>Devolução</th><th>Status</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="e : ${emprestimos}">
+            <td th:text="${e.usuario.nome}"></td>
+            <td th:text="${e.material.titulo}"></td>
+            <td th:text="${#temporals.format(e.dataEmprestimo, 'dd/MM/yyyy')}"></td>
+            <td th:text="${#temporals.format(e.dataDevolucao, 'dd/MM/yyyy')}"></td>
+            <td>
+              <span class="status-badge"
+                th:classappend="${e.status == 'Ativo' ? 'st-ativo' : (e.status == 'Atrasado' ? 'st-atrasado' : 'st-inativo')}"
+                th:text="${e.status}"></span>
+            </td>
+            <td class="actions-cell">
+              <button class="btn-sm btn-edit"
+                th:data-id="${e.id}"
+                th:data-usuario-id="${e.usuario.id}"
+                th:data-material-id="${e.material.id}"
+                th:data-data-emprestimo="${e.dataEmprestimo}"
+                th:data-data-devolucao="${e.dataDevolucao}"
+                th:data-status="${e.status}">Editar</button>
+              <form th:action="@{/emprestimos/{id}/deletar(id=${e.id})}" method="post"
+                    onsubmit="return confirm('Excluir este empréstimo?')">
+                <button type="submit" class="btn-sm btn-delete">Excluir</button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(emprestimos)}">
+            <td colspan="6" class="empty-row">Nenhum empréstimo encontrado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- CREATE MODAL -->
+<div id="createEmprestimoModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Novo Empréstimo</h3>
+      <button class="modal-close-btn" onclick="closeModal('createEmprestimoModal')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <form th:action="@{/emprestimos}" method="post">
+        <div class="form-group">
+          <label>Usuário</label>
+          <select name="usuarioId" required>
+            <option value="">Selecione um usuário...</option>
+            <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${u.nome}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Material</label>
+          <select name="materialId" required>
+            <option value="">Selecione um material...</option>
+            <option th:each="m : ${materiais}" th:value="${m.id}" th:text="${m.titulo}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data do Empréstimo</label>
+          <input type="date" name="dataEmprestimo" required/>
+        </div>
+        <div class="form-group">
+          <label>Data de Devolução</label>
+          <input type="date" name="dataDevolucao" required/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('createEmprestimoModal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editEmprestimoModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Editar Empréstimo</h3>
+      <button class="modal-close-btn" onclick="closeModal('editEmprestimoModal')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <form id="editEmprestimoForm" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-group">
+          <label>Usuário</label>
+          <select id="editUsuarioId" name="usuarioId" required>
+            <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${u.nome}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Material</label>
+          <select id="editMaterialId" name="materialId" required>
+            <option th:each="m : ${materiais}" th:value="${m.id}" th:text="${m.titulo}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data do Empréstimo</label>
+          <input type="date" id="editDataEmprestimo" name="dataEmprestimo" required/>
+        </div>
+        <div class="form-group">
+          <label>Data de Devolução</label>
+          <input type="date" id="editDataDevolucao" name="dataDevolucao" required/>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="editStatusEmprestimo" name="status">
+            <option value="Ativo">Ativo</option>
+            <option value="Atrasado">Atrasado</option>
+            <option value="Devolvido">Devolvido</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('editEmprestimoModal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Atualizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.btn-edit').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.getElementById('editUsuarioId').value = this.dataset.usuarioId;
+    document.getElementById('editMaterialId').value = this.dataset.materialId;
+    document.getElementById('editDataEmprestimo').value = this.dataset.dataEmprestimo;
+    document.getElementById('editDataDevolucao').value = this.dataset.dataDevolucao;
+    document.getElementById('editStatusEmprestimo').value = this.dataset.status;
+    document.getElementById('editEmprestimoForm').action = '/emprestimos/' + this.dataset.id + '/editar';
+    openModal('editEmprestimoModal');
+  });
+});
+
+document.querySelectorAll('.modal-backdrop').forEach(function(bd){
+  bd.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); });
+});
+</script>
+</body>
+</html>

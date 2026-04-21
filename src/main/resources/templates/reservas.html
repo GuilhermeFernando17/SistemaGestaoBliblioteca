@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Reservas - Sistema de Biblioteca</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Reserva de Materiais</h1>
+        <p>Gerenciamento de Reservas</p>
+      </div>
+      <button class="btn-primary" onclick="openModal('createReservaModal')">+ Nova Reserva</button>
+    </div>
+
+    <form class="search-form" th:action="@{/reservas}" method="get">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" name="busca" th:value="${busca}" placeholder="Buscar por nome..."/>
+      <button type="submit">Buscar</button>
+    </form>
+
+    <div class="card">
+      <h2 class="card-title">Reservas (<span th:text="${reservas.size()}">0</span>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Usuário</th><th>Material</th><th>Reserva</th><th>Empréstimo</th><th>Status</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="r : ${reservas}">
+            <td th:text="${r.usuario.nome}"></td>
+            <td th:text="${r.material.titulo}"></td>
+            <td th:text="${#temporals.format(r.dataReserva, 'dd/MM/yyyy')}"></td>
+            <td th:text="${#temporals.format(r.dataEmprestimoPrevisto, 'dd/MM/yyyy')}"></td>
+            <td>
+              <span class="status-badge"
+                th:classappend="${r.status == 'Pendente' ? 'st-pendente' : (r.status == 'Confirmada' ? 'st-ativo' : 'st-inativo')}"
+                th:text="${r.status}"></span>
+            </td>
+            <td class="actions-cell">
+              <button class="btn-sm btn-edit"
+                th:data-id="${r.id}"
+                th:data-usuario-id="${r.usuario.id}"
+                th:data-material-id="${r.material.id}"
+                th:data-data-reserva="${r.dataReserva}"
+                th:data-data-emprestimo-previsto="${r.dataEmprestimoPrevisto}"
+                th:data-status="${r.status}">Editar</button>
+              <form th:action="@{/reservas/{id}/deletar(id=${r.id})}" method="post"
+                    onsubmit="return confirm('Excluir esta reserva?')">
+                <button type="submit" class="btn-sm btn-delete">Excluir</button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(reservas)}">
+            <td colspan="6" class="empty-row">Nenhuma reserva encontrada.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- CREATE MODAL -->
+<div id="createReservaModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Nova Reserva</h3>
+      <button class="modal-close-btn" onclick="closeModal('createReservaModal')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <form th:action="@{/reservas}" method="post">
+        <div class="form-group">
+          <label>Usuário</label>
+          <select name="usuarioId" required>
+            <option value="">Selecione um usuário...</option>
+            <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${u.nome}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Material</label>
+          <select name="materialId" required>
+            <option value="">Selecione um material...</option>
+            <option th:each="m : ${materiais}" th:value="${m.id}" th:text="${m.titulo}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data da Reserva</label>
+          <input type="date" name="dataReserva" required/>
+        </div>
+        <div class="form-group">
+          <label>Previsão de Empréstimo</label>
+          <input type="date" name="dataEmprestimoPrevisto" required/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('createReservaModal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editReservaModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Editar Reserva</h3>
+      <button class="modal-close-btn" onclick="closeModal('editReservaModal')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <form id="editReservaForm" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-group">
+          <label>Usuário</label>
+          <select id="editReservaUsuarioId" name="usuarioId" required>
+            <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${u.nome}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Material</label>
+          <select id="editReservaMaterialId" name="materialId" required>
+            <option th:each="m : ${materiais}" th:value="${m.id}" th:text="${m.titulo}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data da Reserva</label>
+          <input type="date" id="editDataReserva" name="dataReserva" required/>
+        </div>
+        <div class="form-group">
+          <label>Previsão de Empréstimo</label>
+          <input type="date" id="editDataEmprestimoPrevisto" name="dataEmprestimoPrevisto" required/>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="editStatusReserva" name="status">
+            <option value="Pendente">Pendente</option>
+            <option value="Confirmada">Confirmada</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('editReservaModal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Atualizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.btn-edit').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.getElementById('editReservaUsuarioId').value = this.dataset.usuarioId;
+    document.getElementById('editReservaMaterialId').value = this.dataset.materialId;
+    document.getElementById('editDataReserva').value = this.dataset.dataReserva;
+    document.getElementById('editDataEmprestimoPrevisto').value = this.dataset.dataEmprestimoPrevisto;
+    document.getElementById('editStatusReserva').value = this.dataset.status;
+    document.getElementById('editReservaForm').action = '/reservas/' + this.dataset.id + '/editar';
+    openModal('editReservaModal');
+  });
+});
+
+document.querySelectorAll('.modal-backdrop').forEach(function(bd){
+  bd.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); });
+});
+</script>
+</body>
+</html>
