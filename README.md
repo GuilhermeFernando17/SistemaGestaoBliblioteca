@@ -26,8 +26,8 @@ Sistema web completo para gerenciamento de biblioteca, desenvolvido com Java 24 
 **Como executar**
 
 Passos
-- 1. Entre na pasta do projeto
- - 2. Compile e execute o comando  "mvn spring-boot:run"
+- Entre na pasta do projeto
+- Compile e execute o comando  "mvn spring-boot:run"
 
 
 Acesso
