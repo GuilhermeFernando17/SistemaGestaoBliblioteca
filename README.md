@@ -1,6 +1,6 @@
 # Sistema de Gerenciamento de Biblioteca
 
-Sistema web completo para gerenciamento de biblioteca, desenvolvido com Java 24 + Spring Boot 3.4.1 + SQLite.
+Sistema web completo para gerenciamento de biblioteca, desenvolvido com Java 24 + Spring Boot 3.4.1 + MongoDB.
 
 
 **Ferramentas Utilitzadas**
