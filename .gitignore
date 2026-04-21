@@ -35,3 +35,5 @@ logs/
 # Variáveis de ambiente
 .env
 
+.claude
+
