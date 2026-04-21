@@ -39,6 +39,5 @@ Acesso
 
 
 **MongoDB**
-Para acessar os dados do sistema entre na collection localhost:27017 do  MongoDB Compass 
-
+- Para acessar os dados do sistema entre na collection: localhost:27017 via Compass
 
